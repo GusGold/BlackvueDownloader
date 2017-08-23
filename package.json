@@ -1,0 +1,20 @@
+{
+  "name": "blackvuedownloader",
+  "version": "1.0.0",
+  "description": "Downloads videos from your blackvue camera",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "GusGold",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.5.0",
+    "command-line-args": "^4.0.7",
+    "request": "^2.81.0"
+  },
+  "bugs":{
+    "url": "https://github.com/GusGold/BlackvueDownloader/issues"
+  },
+  "homepage": "https://github.com/GusGold/BlackvueDownloader#readme"
+}
