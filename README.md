@@ -4,11 +4,12 @@ Download clips from Blackvue dashcam. This script is designed to run in a FreeNA
 ## Installation
 
 1. Download and extract [zip](//github.com/GusGold/BlackvueDownloader/archive/master.zip)
-2. Edit run.sh to reflect the IP addressed assigned to your Blackvue dashcam on your network
-3. Add any [arguments](#node-arguments) to the [`node index.js`](//github.com/GusGold/BlackvueDownloader/blob/master/run.sh#L3) command
-4. Add a cronjob to FreeNAS using `jexec <jail id> </path/to/>run.sh`
-5. ?????
-6. Profit
+2. `npm i` in directory the zip was extracted to
+3. Edit [`run.sh`](//github.com/GusGold/BlackvueDownloader/blob/master/run.sh) to reflect the IP addressed assigned to your Blackvue dashcam on your network
+4. Add any [arguments](#node-arguments) to the [`node index.js`](//github.com/GusGold/BlackvueDownloader/blob/master/run.sh#L3) command
+5. Add a cronjob to FreeNAS using `jexec <jail id> </path/to/>run.sh`
+6. ?????
+7. Profit
 
 
 ## Node Arguments
