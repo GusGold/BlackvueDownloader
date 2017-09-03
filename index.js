@@ -41,6 +41,8 @@ var keyFromVal = function(obj, val){
 }
 
 request(options.ipaddress + "/blackvue_vod.cgi", function(err, resp, body){
+  if(err) { console.log(err) };
+  if(!body) { console.log('body undefined'); process.exit(); }
   var recordings = body.split("\n").slice(1, -1);
   var segments = {}
   var segmentArr = [];
@@ -91,32 +93,42 @@ request(options.ipaddress + "/blackvue_vod.cgi", function(err, resp, body){
     segments[segmentTime] = segment;
   }
 
+  segmentArr.sort(function(a, b){
+    return (a > b ? 1 : (a < b ? -1 : 0));
+  });
+
   var lastTrigger = null;
   var toDownload = [];
-
   for(var i = 0; i < segmentArr.length; i++){
     var segment = segments[segmentArr[i]];
     if(segment.type == 'EVENT' || segment.type == 'MANUAL'){
-      if(lastTrigger){
-        if(toDownload.indexOf(segmentArr[i]) === -1){
-          toDownload.push(segmentArr[i]);
-        }
-        lastTrigger = segment.date.getTime();
+      if(segment.type == 'EVENT' && segments[segmentArr[i-1]] && segments[segmentArr[i-1]].type == 'PARK' && segments[segmentArr[i+1]] && segments[segmentArr[i+1]].type == 'NORMAL'){
+        //event was triggered from me starting car and driving off, so no need to worry
+        console.log('Ignoring ' + segment.date + ' because it was a PARK->EVENT->NORMAL event');
       } else {
-        var startDate = segment.date.getTime() - (5*60*1000) //5mins
-        for(var j = 0; i - j >= 0 && startDate < segments[segmentArr[i - j]].date.getTime(); j++){
-          if(toDownload.indexOf(segmentArr[i - j]) === -1){
-            toDownload.push(segmentArr[i - j]);
+        if(lastTrigger){
+          if(toDownload.indexOf(segmentArr[i]) === -1){
+            toDownload.push(segmentArr[i]);
+          }
+          lastTrigger = segment.date.getTime();
+        } else {
+          var startDate = segment.date.getTime() - (5*60*1000) //5mins
+          for(var j = 0; i - j >= 0 && segments[segmentArr[i - j]].date.getTime() > startDate; j++){
+            if(toDownload.indexOf(segmentArr[i - j]) === -1){
+              console.log('Adding ' + segments[segmentArr[i - j]].date + ' because it was within the 5 mins prior to ' + segment.date)
+              toDownload.push(segmentArr[i - j]);
+            }
           }
         }
+        lastTrigger = segment.date.getTime();
       }
-      lastTrigger = segment.date.getTime();
     } else {
       if(lastTrigger){
         if(lastTrigger + (5*60*1000) < segment.date.getTime()){
           lastTrigger = null;
         } else {
           if(toDownload.indexOf(segmentArr[i]) === -1){
+            console.log('Adding ' + segments[segmentArr[i]].date + ' because it was within the 5 mins after ' + segment.date)
             toDownload.push(segmentArr[i]);
           }
         }
@@ -129,33 +141,39 @@ request(options.ipaddress + "/blackvue_vod.cgi", function(err, resp, body){
     var fileStream = fs.createWriteStream(task.temp);
     fileStream.on('close', function(){
       console.log("chmod " + task.temp)
-      fs.chmod(task.temp, 777, function(){
-        console.log("chmod 777 " + task.temp);
-        fs.readFile(task.temp, function(err, data){
-          if(err){ console.log(err) } else {
-            console.log("Read " + task.temp);
-            fs.writeFile(task.file, data, function(err) {
-              if(err){ console.log(err) } else {
-                console.log("Wrote " + task.file);
-                fs.unlink(task.temp, function(err) {
-                  if(err){ console.log(err) } else {
-                    console.log("Deleted " + task.temp);
-                  }
-                });
-              }
-            });
-          }
-        });
+      fs.chmod(task.temp, 777, function(err){
+        if(err){ console.log(err) } else {
+          console.log("chmod 777 " + task.temp);
+          fs.readFile(task.temp, function(err, data){
+            if(err){ console.log(err) } else {
+              console.log("Read " + task.temp);
+              fs.writeFile(task.file, data, function(err) {
+                if(err){ console.log(err) } else {
+                  console.log("Wrote " + task.file);
+                  fs.unlink(task.temp, function(err) {
+                    if(err){ console.log(err) } else {
+                      console.log("Deleted " + task.temp);
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
       });
       callback(null, "");
     });
+    console.log('getting ' + task.url);
     request(task.url).pipe(fileStream);
   }, options.downloadthreads);
 
   var filename = null
 
+  if(!toDownload.length){
+    console.log('No new files to download');
+  }
+
   for(var i = 0; i < toDownload.length; i++){
-    // console.log(segments[toDownload[i]]);
     var segment = segments[toDownload[i]];
     filename = segment.segmentUid + "_" + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, "FRONT") + ".mp4";
     if(segment.views.FRONT && !fs.existsSync( options.destination + filename)){
