@@ -6,7 +6,7 @@ set finishedDownloadDir = "/mnt/BlackvueVODs/"
 set tempDownloadDir = "/home/BlackvueDownloader/temp/"
 
 cd $projectDir
-set isOnline = `nc -z -w 3 $blackvueIP 80 2>&1 && echo "true" || echo "false"`
+set isOnline = `nc -z -w 3 $blackvueIP 80 >&/dev/null && echo "true" || echo "false"`
 if ( $isOnline == "true" ) then
   echo "checked network"
   if (-e node.pid) then
