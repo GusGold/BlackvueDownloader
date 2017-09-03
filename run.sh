@@ -1,20 +1,39 @@
-start () {
-  date +%s > script.lock
-  node index.js
-  rm script.lock
-}
+#!/bin/csh
 
-nc -z 192.168.1.104 80>>/dev/null #IP of Blackvue dashcam
-if  [ $?  == 0 ]; then
-  cd /home/BlackvueDownloader #path of repo
-  if [ -e script.lock ]; then
-    lockdate=$(head -n 1 script.lock)
-    currentdate=$(date +%s)
-    unlockdate=$((currentdate - 6*60))
-    if [ $lockdate -lt $unlockdate ]; then
-      start
-    fi
+set blackvueIP = "192.168.1.104"
+set projectDir = "/home/BlackvueDownloader/"
+set finishedDownloadDir = "/mnt/BlackvueVODs/"
+set tempDownloadDir = "/home/BlackvueDownloader/temp/"
+
+cd $projectDir
+set isOnline = `nc -z -w 3 $blackvueIP 80 2>&1 && echo "true" || echo "false"`
+if ( $isOnline == "true" ) then
+  echo "checked network"
+  if (-e node.pid) then
+    set lastPID = `head -n 1 node.pid`
+    #set isRunning = `kill -0 $lastPID 2>&1 && echo "true" || echo "false"`
+    #echo $isRunning
+    if ( -d "/proc/${lastPID}" ) then
+      echo "Instance still running at $lastPID"
+      goto abort
+    else
+      echo "Starting new instance"
+      goto start
+    endif
   else
-    start
-  fi
-fi
+    echo "No pid found, starting new instace"
+    goto start
+  endif
+else
+  echo "Blackvue not found on network at $blackvueIP"
+  goto abort
+endif
+
+start:
+  if (-e node.pid) rm node.pid
+  rm ${tempDownloadDir}*
+  node index.js -i http://${blackvueIP} -d ${finishedDownloadDir} -t ${tempDownloadDir} & echo $! >> node.pid
+  exit 1
+
+abort:
+  exit 1
