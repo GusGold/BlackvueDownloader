@@ -138,7 +138,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
           lastTrigger = null
         } else {
           if (toDownload.indexOf(segmentArr[i]) === -1) {
-            console.log('Adding ' + segments[segmentArr[i]].date + ' because it was within the 5 mins after ' + segment.date)
+            console.log('Adding ' + segments[segmentArr[i]].date + ' because it was within the 5 mins after ' + lastSegment.date)
             segments[segmentArr[i]].folder = lastSegment.segmentUid + ' ' + lastSegment.type
             toDownload.push(segmentArr[i])
           }
