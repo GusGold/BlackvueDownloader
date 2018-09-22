@@ -185,7 +185,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     if (segment.views.FRONT && !fs.existsSync(options.destination + filename)) {
       q.push({
         url: path.join(options.ipaddress, '/Record/', filename),
-        file: path.join(options.destination, filename),
+        file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
@@ -196,7 +196,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     if (!options.excluderearcam && segment.views.REAR && !fs.existsSync(options.destination + filename)) {
       q.push({
         url: path.join(options.ipaddress, '/Record/', filename),
-        file: path.join(options.destination, filename),
+        file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
@@ -207,7 +207,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     if (!options.excludegps && !fs.existsSync(options.destination + filename)) {
       q.push({
         url: path.join(options.ipaddress, '/Record/', filename),
-        file: path.join(options.destination, filename),
+        file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
@@ -218,7 +218,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     if (!options.excludeaccelerometer && !fs.existsSync(options.destination + filename)) {
       q.push({
         url: path.join(options.ipaddress, '/Record/', filename),
-        file: path.join(options.destination, filename),
+        file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
