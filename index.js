@@ -49,8 +49,8 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
   var segmentArr = []
 
   for (var line = 0; line < recordings.length; line++) {
-    var path = recordings[line].split(',')[0].split(':')[1]
-    var filename = path.split('/')[2]
+    var filepath = recordings[line].split(',')[0].split(':')[1]
+    var filename = filepath.split('/')[2]
     var segmentUid = filename.substr(0, 15)
     var segmentDate = new Date(
       segmentUid.substr(0, 4),
