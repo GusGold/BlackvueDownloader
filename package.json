@@ -13,7 +13,7 @@
     "command-line-args": "^4.0.7",
     "request": "^2.81.0"
   },
-  "bugs":{
+  "bugs": {
     "url": "https://github.com/GusGold/BlackvueDownloader/issues"
   },
   "homepage": "https://github.com/GusGold/BlackvueDownloader#readme"
