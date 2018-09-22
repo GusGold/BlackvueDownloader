@@ -2,6 +2,7 @@ const commandLineArgs = require('command-line-args')
 var request = require('request')
 var async_ = require('async')
 var fs = require('fs')
+const fse = require('fs-extra')
 const path = require('path')
 
 const optionDefinitions = [
@@ -34,7 +35,7 @@ var camviews = {
 var keyFromVal = function (obj, val) {
   var keys = Object.keys(obj)
   for (var i = 0; i < keys.length; i++) {
-    if (obj[keys[i]] == val) {
+    if (obj[keys[i]] === val) {
       return keys[i]
     }
   }
@@ -49,8 +50,8 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
   var segmentArr = []
 
   for (var line = 0; line < recordings.length; line++) {
-    var path = recordings[line].split(',')[0].split(':')[1]
-    var filename = path.split('/')[2]
+    var filepath = recordings[line].split(',')[0].split(':')[1]
+    var filename = filepath.split('/')[2]
     var segmentUid = filename.substr(0, 15)
     var segmentDate = new Date(
       segmentUid.substr(0, 4),
@@ -73,7 +74,8 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
           FRONT: null,
           REAR: null
         },
-        type: null
+        type: null,
+        folder: ''
       }
 
       segmentArr.push(segmentTime)
@@ -102,10 +104,11 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
 
   var lastTrigger = null
   var toDownload = []
+  var lastSegment = null
   for (var i = 0; i < segmentArr.length; i++) {
     var segment = segments[segmentArr[i]]
-    if (segment.type == 'EVENT' || segment.type == 'MANUAL') {
-      if (segment.type == 'EVENT' && segments[segmentArr[i - 1]] && segments[segmentArr[i - 1]].type == 'PARK' && segments[segmentArr[i + 1]] && segments[segmentArr[i + 1]].type == 'NORMAL') {
+    if (segment.type === 'EVENT' || segment.type === 'MANUAL') {
+      if (segment.type === 'EVENT' && segments[segmentArr[i - 1]] && segments[segmentArr[i - 1]].type === 'PARK' && segments[segmentArr[i + 1]] && segments[segmentArr[i + 1]].type === 'NORMAL') {
         // event was triggered from me starting car and driving off, so no need to worry
         console.log('Ignoring ' + segment.date + ' because it was a PARK->EVENT->NORMAL event')
       } else {
@@ -114,11 +117,15 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
             toDownload.push(segmentArr[i])
           }
           lastTrigger = segment.date.getTime()
+          lastSegment = segment
+          segments[segmentArr[i]].folder = lastSegment.segmentUid + ' ' + lastSegment.type
         } else {
+          lastSegment = segment
           var startDate = segment.date.getTime() - (5 * 60 * 1000) // 5mins
           for (var j = 0; i - j >= 0 && segments[segmentArr[i - j]].date.getTime() > startDate; j++) {
             if (toDownload.indexOf(segmentArr[i - j]) === -1) {
               console.log('Adding ' + segments[segmentArr[i - j]].date + ' because it was within the 5 mins prior to ' + segment.date)
+              segments[segmentArr[i - j]].folder = lastSegment.segmentUid + ' ' + lastSegment.type
               toDownload.push(segmentArr[i - j])
             }
           }
@@ -131,7 +138,8 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
           lastTrigger = null
         } else {
           if (toDownload.indexOf(segmentArr[i]) === -1) {
-            console.log('Adding ' + segments[segmentArr[i]].date + ' because it was within the 5 mins after ' + segment.date)
+            console.log('Adding ' + segments[segmentArr[i]].date + ' because it was within the 5 mins after ' + lastSegment.date)
+            segments[segmentArr[i]].folder = lastSegment.segmentUid + ' ' + lastSegment.type
             toDownload.push(segmentArr[i])
           }
         }
@@ -150,7 +158,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
           fs.readFile(task.temp, function (err, data) {
             if (err) { console.log(err) } else {
               console.log('Read ' + task.temp)
-              fs.writeFile(task.file, data, function (err) {
+              fse.outputFile(task.file, data, function (err) {
                 if (err) { console.log(err) } else {
                   console.log('Wrote ' + task.file)
                   fs.unlink(task.temp, function (err) {
@@ -176,47 +184,47 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     console.log('No new files to download')
   }
 
-  for (var i = 0; i < toDownload.length; i++) {
-    var segment = segments[toDownload[i]]
+  for (i = 0; i < toDownload.length; i++) {
+    segment = segments[toDownload[i]]
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'FRONT') + '.mp4'
-    if (segment.views.FRONT && !fs.existsSync(options.destination + filename)) {
+    if (segment.views.FRONT && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        file: path.join(options.destination, segment.folder, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
       })
     }
-    var filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'REAR') + '.mp4'
-    if (!options.excluderearcam && segment.views.REAR && !fs.existsSync(options.destination + filename)) {
+    filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'REAR') + '.mp4'
+    if (!options.excluderearcam && segment.views.REAR && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        file: path.join(options.destination, segment.folder, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
       })
     }
-    var filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.gps'
-    if (!options.excludegps && !fs.existsSync(options.destination + filename)) {
+    filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.gps'
+    if (!options.excludegps && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        file: path.join(options.destination, segment.folder, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
       })
     }
-    var filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.3gf'
-    if (!options.excludeaccelerometer && !fs.existsSync(options.destination + filename)) {
+    filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.3gf'
+    if (!options.excludeaccelerometer && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        file: path.join(options.destination, segment.folder, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
