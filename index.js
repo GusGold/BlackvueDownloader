@@ -104,6 +104,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
 
   var lastTrigger = null
   var toDownload = []
+  var lastSegment = null
   for (var i = 0; i < segmentArr.length; i++) {
     var segment = segments[segmentArr[i]]
     if (segment.type === 'EVENT' || segment.type === 'MANUAL') {
@@ -116,12 +117,15 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
             toDownload.push(segmentArr[i])
           }
           lastTrigger = segment.date.getTime()
+          lastSegment = segment
+          segments[segmentArr[i]].folder = lastSegment.segmentUid + ' ' + lastSegment.type
         } else {
+          lastSegment = segment
           var startDate = segment.date.getTime() - (5 * 60 * 1000) // 5mins
           for (var j = 0; i - j >= 0 && segments[segmentArr[i - j]].date.getTime() > startDate; j++) {
             if (toDownload.indexOf(segmentArr[i - j]) === -1) {
               console.log('Adding ' + segments[segmentArr[i - j]].date + ' because it was within the 5 mins prior to ' + segment.date)
-              segments[segmentArr[i - j]].folder = segment.type + ' ' + segment.segmentUid
+              segments[segmentArr[i - j]].folder = lastSegment.segmentUid + ' ' + lastSegment.type
               toDownload.push(segmentArr[i - j])
             }
           }
@@ -135,7 +139,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
         } else {
           if (toDownload.indexOf(segmentArr[i]) === -1) {
             console.log('Adding ' + segments[segmentArr[i]].date + ' because it was within the 5 mins after ' + segment.date)
-            segments[segmentArr[i]].folder = segment.type + ' ' + segment.segmentUid
+            segments[segmentArr[i]].folder = lastSegment.segmentUid + ' ' + lastSegment.type
             toDownload.push(segmentArr[i])
           }
         }
