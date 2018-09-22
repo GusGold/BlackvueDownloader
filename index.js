@@ -73,7 +73,8 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
           FRONT: null,
           REAR: null
         },
-        type: null
+        type: null,
+        folder: ''
       }
 
       segmentArr.push(segmentTime)
@@ -119,6 +120,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
           for (var j = 0; i - j >= 0 && segments[segmentArr[i - j]].date.getTime() > startDate; j++) {
             if (toDownload.indexOf(segmentArr[i - j]) === -1) {
               console.log('Adding ' + segments[segmentArr[i - j]].date + ' because it was within the 5 mins prior to ' + segment.date)
+              segments[segmentArr[i - j]].folder = segment.type + ' ' + segment.segmentUid
               toDownload.push(segmentArr[i - j])
             }
           }
@@ -132,6 +134,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
         } else {
           if (toDownload.indexOf(segmentArr[i]) === -1) {
             console.log('Adding ' + segments[segmentArr[i]].date + ' because it was within the 5 mins after ' + segment.date)
+            segments[segmentArr[i]].folder = segment.type + ' ' + segment.segmentUid
             toDownload.push(segmentArr[i])
           }
         }
@@ -181,9 +184,9 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'FRONT') + '.mp4'
     if (segment.views.FRONT && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        url: path.join(options.ipaddress, '/Record/', filename),
+        file: path.join(options.destination, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
@@ -192,9 +195,9 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'REAR') + '.mp4'
     if (!options.excluderearcam && segment.views.REAR && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        url: path.join(options.ipaddress, '/Record/', filename),
+        file: path.join(options.destination, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
@@ -203,9 +206,9 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.gps'
     if (!options.excludegps && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        url: path.join(options.ipaddress, '/Record/', filename),
+        file: path.join(options.destination, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
@@ -214,9 +217,9 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.3gf'
     if (!options.excludeaccelerometer && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: options.ipaddress + '/Record/' + filename,
-        file: options.destination + filename,
-        temp: options.tempdir + filename
+        url: path.join(options.ipaddress, '/Record/', filename),
+        file: path.join(options.destination, filename),
+        temp: path.join(options.tempdir, filename)
       }, function (err, res) {
         if (err) console.error(err)
         console.log('finished')
