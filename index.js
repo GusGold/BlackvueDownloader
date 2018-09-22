@@ -184,7 +184,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'FRONT') + '.mp4'
     if (segment.views.FRONT && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: path.join(options.ipaddress, '/Record/', filename),
+        url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
@@ -195,7 +195,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'REAR') + '.mp4'
     if (!options.excluderearcam && segment.views.REAR && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: path.join(options.ipaddress, '/Record/', filename),
+        url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
@@ -206,7 +206,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.gps'
     if (!options.excludegps && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: path.join(options.ipaddress, '/Record/', filename),
+        url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
@@ -217,7 +217,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.3gf'
     if (!options.excludeaccelerometer && !fs.existsSync(options.destination + filename)) {
       q.push({
-        url: path.join(options.ipaddress, '/Record/', filename),
+        url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
         temp: path.join(options.tempdir, filename)
       }, function (err, res) {
