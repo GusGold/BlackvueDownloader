@@ -1,6 +1,6 @@
 #!/bin/csh
 
-set blackvueIP = "192.168.1.104"
+set blackvueIP = "192.168.2.199"
 set projectDir = "/home/BlackvueDownloader/"
 set finishedDownloadDir = "/mnt/BlackvueVODs/"
 set tempDownloadDir = "/home/BlackvueDownloader/temp/"
@@ -31,7 +31,8 @@ endif
 
 start:
   if (-e node.pid) rm node.pid
-  rm ${tempDownloadDir}*
+  set tempDir = `ls -a ${tempDownloadDir} | wc | awk '{print $1}'`
+  if ("${tempDir}" != 2) rm ${tempDownloadDir}*
   node index.js -i http://${blackvueIP} -d ${finishedDownloadDir} -t ${tempDownloadDir} & echo $! >> node.pid
   exit 1
 
