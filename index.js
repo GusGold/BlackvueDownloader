@@ -2,6 +2,7 @@ const commandLineArgs = require('command-line-args')
 var request = require('request')
 var async_ = require('async')
 var fs = require('fs')
+const fse = require('fs-extra')
 const path = require('path')
 
 const optionDefinitions = [
@@ -153,7 +154,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
           fs.readFile(task.temp, function (err, data) {
             if (err) { console.log(err) } else {
               console.log('Read ' + task.temp)
-              fs.writeFile(task.file, data, function (err) {
+              fse.outputFile(task.file, data, function (err) {
                 if (err) { console.log(err) } else {
                   console.log('Wrote ' + task.file)
                   fs.unlink(task.temp, function (err) {
