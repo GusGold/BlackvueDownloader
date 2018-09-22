@@ -1,6 +1,6 @@
 {
   "name": "blackvuedownloader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Downloads videos from your blackvue camera",
   "main": "index.js",
   "scripts": {
