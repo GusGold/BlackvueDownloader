@@ -187,7 +187,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
   for (i = 0; i < toDownload.length; i++) {
     segment = segments[toDownload[i]]
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'FRONT') + '.mp4'
-    if (segment.views.FRONT && !fs.existsSync(options.destination + filename)) {
+    if (segment.views.FRONT && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
@@ -198,7 +198,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
       })
     }
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + keyFromVal(camviews, 'REAR') + '.mp4'
-    if (!options.excluderearcam && segment.views.REAR && !fs.existsSync(options.destination + filename)) {
+    if (!options.excluderearcam && segment.views.REAR && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
@@ -209,7 +209,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
       })
     }
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.gps'
-    if (!options.excludegps && !fs.existsSync(options.destination + filename)) {
+    if (!options.excludegps && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
@@ -220,7 +220,7 @@ request(options.ipaddress + '/blackvue_vod.cgi', function (err, resp, body) {
       })
     }
     filename = segment.segmentUid + '_' + keyFromVal(vodtypes, segment.type) + '.3gf'
-    if (!options.excludeaccelerometer && !fs.existsSync(options.destination + filename)) {
+    if (!options.excludeaccelerometer && !fs.existsSync(path.join(options.destination, segment.folder, filename))) {
       q.push({
         url: options.ipaddress + '/Record/' + filename,
         file: path.join(options.destination, segment.folder, filename),
